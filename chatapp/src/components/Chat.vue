@@ -24,41 +24,50 @@ onMounted(() => {
 // #region browser event handler
 // 投稿メッセージをサーバに送信する
 const onPublish = () => {
+  if(chatContent.value.length === 0) {
+    return false
+  }
+  socket.emit("publishEvent", chatContent.value)
 
   // 入力欄を初期化
+  chatContent.value = ""
 
-  return false
 }
 
 // 退室メッセージをサーバに送信する
 const onExit = () => {
+  socket.emit("exitEvent", userName.value + "さんが退出しました。")
 
 }
 
 // メモを画面上に表示する
 const onMemo = () => {
+  if(chatContent.value === 0) {
+    return false
+  }
   // メモの内容を表示
+  chatList.push(chatContent.value)
 
   // 入力欄を初期化
+  chatContent.value = ""
 
-  return false
 }
 // #endregion
 
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
 const onReceiveEnter = (data) => {
-  onReceiveEnter(data)
+  chatList.push(data)
 }
 
 // サーバから受信した退室メッセージを受け取り画面上に表示する
 const onReceiveExit = (data) => {
-  onReceiveExit(data)
+  chatList.push(data)
 }
 
 // サーバから受信した投稿メッセージを画面上に表示する
 const onReceivePublish = (data) => {
-  onReceivePublish(data)
+  chatList.push(data)
 }
 // #endregion
 
@@ -67,17 +76,17 @@ const onReceivePublish = (data) => {
 const registSocketEvent = () => {
   // 入室イベントを受け取ったら実行
   socket.on("enterEvent", (data) => {
-
+    onReceiveEnter(data)
   })
 
   // 退室イベントを受け取ったら実行
   socket.on("exitEvent", (data) => {
-
+    onReceiveExit(data)
   })
 
   // 投稿イベントを受け取ったら実行
   socket.on("publishEvent", (data) => {
-
+    onReceivePublish(data)
   })
 }
 // #endregion
@@ -88,10 +97,10 @@ const registSocketEvent = () => {
     <h1 class="text-h3 font-weight-medium">Vue.js Chat チャットルーム</h1>
     <div class="mt-10">
       <p>ログインユーザ：{{ userName }}さん</p>
-      <textarea variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
+      <v-textarea variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area" v-model="chatContent"></v-textarea>
       <div class="mt-5">
-        <button class="button-normal">投稿</button>
-        <button class="button-normal util-ml-8px">メモ</button>
+        <v-btn class="button-normal" @click="onPublish">投稿</v-btn>
+        <v-btn class="button-normal util-ml-8px" @click="onMemo">メモ</v-btn>
       </div>
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
@@ -100,7 +109,7 @@ const registSocketEvent = () => {
       </div>
     </div>
     <router-link to="/" class="link">
-      <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
+      <v-btn class="button-normal button-exit" @click="onExit">退室する</v-btn>
     </router-link>
   </div>
 </template>
